@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "SpicyFusionKitchen"
 include(":app")
+include(":feature:home")
