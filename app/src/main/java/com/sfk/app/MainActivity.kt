@@ -5,12 +5,24 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocalDining
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.sfk.app.ui.theme.SfkTheme
+import com.sfk.app.ui.components.bottombar.BottomTab
+import com.sfk.app.ui.components.bottombar.SfkBottomBar
+import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,44 +30,44 @@ class MainActivity : ComponentActivity() {
         setContent { SfkAppRoot() }
     }
 }
-
 @Composable
 fun SfkAppRoot() {
-    MaterialTheme(colorScheme = lightColorScheme()) {
+    SfkTheme {
         val nav = rememberNavController()
-        val tabs = listOf("home", "search", "saved", "more")
+        val current = nav.currentBackStackEntryAsState().value?.destination?.route ?: "home"
+
+        val tabs = listOf(
+            BottomTab("home",   Icons.Outlined.Home,   "Home"),
+            BottomTab("search", Icons.Outlined.Search, "Search"),
+            BottomTab("saved",  Icons.Outlined.LocalDining, "Saved"),
+            BottomTab("more",   Icons.Outlined.Person, "More")
+        )
 
         Scaffold(
             bottomBar = {
-                NavigationBar {
-                    val current = nav.currentBackStackEntryAsState().value?.destination?.route
-                    tabs.forEach { route ->
-                        NavigationBarItem(
-                            selected = current == route,
-                            onClick = {
-                                nav.navigate(route) {
-                                    popUpTo(nav.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true; restoreState = true
-                                }
-                            },
-                            icon = { Icon(Icons.Default.Circle, contentDescription = route) },
-                            label = { Text(route.replaceFirstChar { it.uppercase() }) }
-                        )
+                SfkBottomBar(
+                    tabs = tabs,
+                    selectedRoute = current,
+                    onTabSelected = { route ->
+                        nav.navigate(route) {
+                            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
+                )
             }
         ) { padding ->
-            NavHost(nav, startDestination = "home", modifier = Modifier.padding(padding)) {
-                composable("home") { CenteredText("Home") }
-                composable("search") { CenteredText("Search") }
-                composable("saved") { CenteredText("Saved") }
-                composable("more") { CenteredText("More") }
+            NavHost(
+                navController = nav,
+                startDestination = "home",
+                modifier = Modifier.padding(padding)
+            ) {
+                composable("home")   { Text("Home", style = MaterialTheme.typography.headlineSmall) }
+                composable("search") { Text("Search", style = MaterialTheme.typography.headlineSmall) }
+                composable("saved")  { Text("Saved", style = MaterialTheme.typography.headlineSmall) }
+                composable("more")   { Text("More", style = MaterialTheme.typography.headlineSmall) }
             }
         }
     }
-}
-
-@Composable
-private fun CenteredText(text: String) {
-    Text(text = text, style = MaterialTheme.typography.headlineSmall)
 }
