@@ -52,6 +52,7 @@ dependencies {
     // Navigation + Activity
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.activity.compose.v1110)
+    implementation(libs.accompanist.systemuicontroller)
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
