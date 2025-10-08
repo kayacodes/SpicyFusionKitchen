@@ -1,4 +1,4 @@
-package com.sfk.app.feature.home
+package com.sfk.app.feature.home.di
 
 import com.sfk.app.feature.home.viewmodel.HomeViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
