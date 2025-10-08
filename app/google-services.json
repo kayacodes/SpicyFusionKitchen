@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "643739046369",
+    "project_id": "spicy-fusion-kitchen",
+    "storage_bucket": "spicy-fusion-kitchen.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:643739046369:android:ffec85c468f1858a03c2a0",
+        "android_client_info": {
+          "package_name": "com.sfk.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-ud7Zu-S3vjQHry-b0RhWk4LlqqWogcs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

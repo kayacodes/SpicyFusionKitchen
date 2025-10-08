@@ -1,6 +1,7 @@
 [versions]
 coilComposeVersion = "2.7.0"
 coilSvgVersion = "2.7.0"
+firebaseBomVersion = "34.3.0"
 koinAndroidxViewmodelVersion = "3.5.6"
 kotlin = "2.0.21"
 agp = "8.13.0"
@@ -38,6 +39,8 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx"
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coilSvgVersion" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBomVersion" }
 koin-androidx-viewmodel = { module = "io.insert-koin:koin-androidx-viewmodel", version.ref = "koinAndroidxViewmodelVersion" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 

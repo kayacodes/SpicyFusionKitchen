@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.android.library) apply false
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
+    id("com.google.gms.google-services") version "4.4.3" apply false
 }
 val detektConfig = files("$rootDir/config/detekt/detekt.yml")
 
