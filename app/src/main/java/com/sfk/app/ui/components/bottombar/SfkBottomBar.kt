@@ -1,12 +1,10 @@
 package com.sfk.app.ui.components.bottombar
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,12 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -43,59 +36,22 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import com.sfk.app.ui.theme.SfkBottomBarStyle
 
+@SuppressLint("ComposableNaming")
 @Composable
-fun SfkBottomBar(
+fun sfkBottomBar(
     tabs: List<BottomTab>,
     selectedRoute: String,
     onTabSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = Color.Black,
-    liquidColor: Color = Color(0xFF333333),
-    iconColor: Color = Color(0xFFFCFCF9),
-    selectedIconColor: Color = Color(0xFFFFFFFF),
-    elevation: Dp = 12.dp
+    style: SfkBottomBarStyle = SfkBottomBarStyle()
 ) {
     val density = LocalDensity.current
-    var barWidthPx by remember { mutableStateOf(0f) }
-    val centers = remember { mutableStateListOf<Float>() }
-
+    val rPx = with(density) { SfkBottomBarState.LIQUID_RADIUS_DP.toPx() }
+    val state = rememberSfkBottomBarState(tabs, selectedRoute)
     val selectedIndex = tabs.indexOfFirst { it.route == selectedRoute }.coerceAtLeast(0)
-
-    val startX = remember { Animatable(0f) }
-    val endX = remember { Animatable(0f) }
-
-    val rDp = 18.dp
-    val rPx = with(density) { rDp.toPx() }
-
-    val stretchSpec = tween<Float>(600, easing = FastOutSlowInEasing)
-    val catchUpSpec = tween<Float>(420, easing = LinearOutSlowInEasing)
-
-    LaunchedEffect(tabs.size) {
-        centers.clear()
-        repeat(tabs.size) { centers += 0f }
-    }
-
-    LaunchedEffect(selectedIndex, centers.toList(), barWidthPx) {
-        if (centers.isEmpty()) return@LaunchedEffect
-        val target = centers[selectedIndex]
-        if (startX.value == 0f && endX.value == 0f) {
-            startX.snapTo(target)
-            endX.snapTo(target)
-        } else {
-            val goingRight = target > endX.value
-            if (goingRight) {
-                launch { endX.animateTo(target, stretchSpec) }
-                launch { startX.animateTo(target, catchUpSpec) }
-            } else {
-                launch { startX.animateTo(target, stretchSpec) }
-                launch { endX.animateTo(target, catchUpSpec) }
-            }
-        }
-    }
 
     Surface(
         color = Color.Transparent,
@@ -106,105 +62,150 @@ fun SfkBottomBar(
     ) {
         Box(
             modifier = Modifier
-                .shadow(elevation, RoundedCornerShape(28.dp), clip = false)
-                .background(containerColor, RoundedCornerShape(28.dp))
-                .padding(horizontal = 18.dp, vertical = 10.dp)
+                .shadow(
+                    style.elevation,
+                    RoundedCornerShape(SfkBottomBarState.BAR_CORNER_RADIUS_DP),
+                    clip = false
+                )
+                .background(
+                    style.colors.container,
+                    RoundedCornerShape(SfkBottomBarState.BAR_CORNER_RADIUS_DP)
+                )
+                .padding(
+                    horizontal = SfkBottomBarState.BAR_PADDING_H_DP,
+                    vertical = SfkBottomBarState.BAR_PADDING_V_DP
+                )
                 .fillMaxWidth()
-                .onGloballyPositioned { barWidthPx = it.size.width.toFloat() }
+                .onGloballyPositioned { state.barWidthPx = it.size.width.toFloat() }
         ) {
+            liquidHighlight(
+                state = state,
+                rPx = rPx,
+                color = style.colors.liquid
+            )
+            tabsRow(
+                tabs = tabs,
+                selectedIndex = selectedIndex,
+                style = style,
+                onTabSelected = onTabSelected
+            ) { index, cx ->
+                if (state.centers.size > index) state.centers[index] = cx
+            }
+        }
+    }
+}
+
+@Composable
+private fun liquidHighlight(
+    state: SfkBottomBarState,
+    rPx: Float,
+    color: Color
+) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(SfkBottomBarState.LIQUID_HEIGHT_DP)
+    ) {
+        Canvas(
+            Modifier
+                .fillMaxWidth()
+                .height(SfkBottomBarState.LIQUID_HEIGHT_DP)
+        ) {
+            val hCenter = size.height * SfkBottomBarState.HALF
+            val sx = state.startX.value
+            val ex = state.endX.value
+            if (sx == 0f && ex == 0f) return@Canvas
+            val left = kotlin.math.min(sx, ex)
+            val right = kotlin.math.max(sx, ex)
+            val dist = (right - left).coerceAtLeast(SfkBottomBarState.MIN_DIST_PX)
+            val pinch =
+                (dist * SfkBottomBarState.HALF)
+                    .coerceAtMost(rPx * SfkBottomBarState.PINCH_FACTOR_MAX)
+            val topY = hCenter - rPx
+            val botY = hCenter + rPx
+            val midX = (left + right) * SfkBottomBarState.HALF
+            val path = Path().apply {
+                moveTo(left, topY)
+                quadraticBezierTo(midX, topY + pinch, right, topY)
+                arcTo(
+                    rect = Rect(
+                        right - rPx,
+                        hCenter - rPx,
+                        right + rPx,
+                        hCenter + rPx
+                    ),
+                    startAngleDegrees = -90f,
+                    sweepAngleDegrees = 180f,
+                    forceMoveTo = false
+                )
+                quadraticBezierTo(midX, botY - pinch, left, botY)
+                arcTo(
+                    rect = Rect(
+                        left - rPx,
+                        hCenter - rPx,
+                        left + rPx,
+                        hCenter + rPx
+                    ),
+                    startAngleDegrees = 90f,
+                    sweepAngleDegrees = 180f,
+                    forceMoveTo = false
+                )
+                close()
+            }
+            drawPath(path = path, color = color, style = Fill)
+        }
+    }
+}
+
+@Composable
+private fun tabsRow(
+    tabs: List<BottomTab>,
+    selectedIndex: Int,
+    style: SfkBottomBarStyle,
+    onTabSelected: (String) -> Unit,
+    onIconPositioned: (index: Int, centerX: Float) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        tabs.forEachIndexed { index, tab ->
+            val isSelected = index == selectedIndex
+            val interaction = MutableInteractionSource()
+            val scale by animateFloatAsState(
+                targetValue = if (isSelected) {
+                    SfkBottomBarState.SELECTED_ICON_SCALE
+                } else {
+                    SfkBottomBarState.BASE_ICON_SCALE
+                },
+                animationSpec = spring(
+                    dampingRatio = SfkBottomBarState.ICON_DAMPING,
+                    stiffness = Spring.StiffnessLow
+                ),
+                label = "iconScale"
+            )
+            val tint =
+                if (isSelected) style.colors.selectedIcon else style.colors.icon
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp)
+                    .size(SfkBottomBarState.ICON_BOX_DP)
+                    .semantics { contentDescription = tab.contentDescription }
+                    .clickable(
+                        interactionSource = interaction,
+                        indication = null
+                    ) { onTabSelected(tab.route) }
+                    .onGloballyPositioned { coords ->
+                        onIconPositioned(index, coords.boundsInParent().center.x)
+                    },
+                contentAlignment = Alignment.Center
             ) {
-                androidx.compose.foundation.Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(44.dp)
-                ) {
-                    val hCenter = size.height / 2f
-                    val sx = startX.value
-                    val ex = endX.value
-                    if (sx == 0f && ex == 0f) return@Canvas
-
-                    val left = kotlin.math.min(sx, ex)
-                    val right = kotlin.math.max(sx, ex)
-                    val dist = (right - left).coerceAtLeast(1f)
-
-                    val pinch = (dist / 2f).coerceAtMost(rPx * 1.4f)
-                    val topY = hCenter - rPx
-                    val botY = hCenter + rPx
-                    val midX = (left + right) / 2f
-
-                    val path = Path().apply {
-                        moveTo(left, topY)
-                        quadraticBezierTo(midX, topY + pinch, right, topY)
-                        arcTo(
-                            rect = Rect(
-                                left = right - rPx,
-                                top = hCenter - rPx,
-                                right = right + rPx,
-                                bottom = hCenter + rPx
-                            ),
-                            startAngleDegrees = -90f,
-                            sweepAngleDegrees = 180f,
-                            forceMoveTo = false
-                        )
-                        quadraticBezierTo(midX, botY - pinch, left, botY)
-                        arcTo(
-                            rect = Rect(
-                                left = left - rPx,
-                                top = hCenter - rPx,
-                                right = left + rPx,
-                                bottom = hCenter + rPx
-                            ),
-                            startAngleDegrees = 90f,
-                            sweepAngleDegrees = 180f,
-                            forceMoveTo = false
-                        )
-                        close()
-                    }
-                    drawPath(path = path, color = liquidColor, style = Fill)
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                tabs.forEachIndexed { index, tab ->
-                    val isSelected = index == selectedIndex
-                    val interaction = remember { MutableInteractionSource() }
-                    val scale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.06f else 1f,
-                        animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessLow),
-                        label = "iconScale"
-                    )
-                    val tint = if (isSelected) selectedIconColor else iconColor
-
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .semantics { contentDescription = tab.contentDescription }
-                            .clickable(
-                                interactionSource = interaction,
-                                indication = null
-                            ) { onTabSelected(tab.route) }
-                            .onGloballyPositioned { coords ->
-                                val cx = coords.boundsInParent().center.x
-                                if (centers.size > index) centers[index] = cx
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = tab.icon,
-                            contentDescription = null,
-                            tint = tint,
-                            modifier = Modifier.scale(scale)
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = tab.icon,
+                    contentDescription = null,
+                    tint = tint,
+                    modifier = Modifier.scale(scale)
+                )
             }
         }
     }

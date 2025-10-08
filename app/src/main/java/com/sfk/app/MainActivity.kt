@@ -20,7 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.sfk.app.ui.components.bottombar.BottomTab
-import com.sfk.app.ui.components.bottombar.SfkBottomBar
+import com.sfk.app.ui.components.bottombar.sfkBottomBar
 import com.sfk.app.ui.theme.SfkTheme
 
 class MainActivity : ComponentActivity() {
@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Suppress("FunctionNaming")
 @Composable
 fun SfkAppRoot() {
     SfkTheme {
@@ -45,7 +46,7 @@ fun SfkAppRoot() {
 
         Scaffold(
             bottomBar = {
-                SfkBottomBar(
+                sfkBottomBar(
                     tabs = tabs,
                     selectedRoute = current,
                     onTabSelected = { route ->

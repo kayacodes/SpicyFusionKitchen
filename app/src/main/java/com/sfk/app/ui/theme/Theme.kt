@@ -18,6 +18,7 @@ private val LightColors = lightColorScheme(
     onSurface = Black
 )
 
+@Suppress("FunctionNaming")
 @Composable
 fun SfkTheme(content: @Composable () -> Unit) {
     val systemUiController = rememberSystemUiController()
