@@ -20,7 +20,10 @@ private val LightColors = lightColorScheme(
 
 @Suppress("FunctionNaming")
 @Composable
-fun SfkTheme(content: @Composable () -> Unit) {
+fun SfkTheme(
+    dimens: Dimens = DefaultDimens,
+    content: @Composable () -> Unit,
+) {
     val systemUiController = rememberSystemUiController()
     SideEffect {
         systemUiController.setStatusBarColor(
