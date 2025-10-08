@@ -36,7 +36,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import com.sfk.app.ui.theme.SfkBottomBarStyle
 
 @SuppressLint("ComposableNaming")
@@ -57,7 +56,7 @@ fun sfkBottomBar(
         color = Color.Transparent,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = SfkBottomBarState.BAR_PADDING_H_DP, vertical = SfkBottomBarState.BAR_PADDING_V_DP)
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
         Box(
@@ -78,11 +77,7 @@ fun sfkBottomBar(
                 .fillMaxWidth()
                 .onGloballyPositioned { state.barWidthPx = it.size.width.toFloat() }
         ) {
-            liquidHighlight(
-                state = state,
-                rPx = rPx,
-                color = style.colors.liquid
-            )
+            liquidHighlight(state = state, rPx = rPx, color = style.colors.liquid)
             tabsRow(
                 tabs = tabs,
                 selectedIndex = selectedIndex,
@@ -118,15 +113,14 @@ private fun liquidHighlight(
             val left = kotlin.math.min(sx, ex)
             val right = kotlin.math.max(sx, ex)
             val dist = (right - left).coerceAtLeast(SfkBottomBarState.MIN_DIST_PX)
-            val pinch =
-                (dist * SfkBottomBarState.HALF)
-                    .coerceAtMost(rPx * SfkBottomBarState.PINCH_FACTOR_MAX)
+            val pinch = (dist * SfkBottomBarState.HALF)
+                .coerceAtMost(rPx * SfkBottomBarState.PINCH_FACTOR_MAX)
             val topY = hCenter - rPx
             val botY = hCenter + rPx
             val midX = (left + right) * SfkBottomBarState.HALF
             val path = Path().apply {
                 moveTo(left, topY)
-                quadraticBezierTo(midX, topY + pinch, right, topY)
+                quadraticTo(midX, topY + pinch, right, topY)
                 arcTo(
                     rect = Rect(
                         right - rPx,
@@ -138,7 +132,7 @@ private fun liquidHighlight(
                     sweepAngleDegrees = 180f,
                     forceMoveTo = false
                 )
-                quadraticBezierTo(midX, botY - pinch, left, botY)
+                quadraticTo(midX, botY - pinch, left, botY)
                 arcTo(
                     rect = Rect(
                         left - rPx,
@@ -157,6 +151,7 @@ private fun liquidHighlight(
     }
 }
 
+@SuppressLint("ComposableNaming")
 @Composable
 private fun tabsRow(
     tabs: List<BottomTab>,
@@ -185,8 +180,7 @@ private fun tabsRow(
                 ),
                 label = "iconScale"
             )
-            val tint =
-                if (isSelected) style.colors.selectedIcon else style.colors.icon
+            val tint = if (isSelected) style.colors.selectedIcon else style.colors.icon
             Box(
                 modifier = Modifier
                     .size(SfkBottomBarState.ICON_BOX_DP)

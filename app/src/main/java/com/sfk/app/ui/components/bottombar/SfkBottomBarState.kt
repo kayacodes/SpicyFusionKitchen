@@ -12,6 +12,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 class SfkBottomBarState internal constructor(tabCount: Int) {
     val startX = Animatable(0f)
@@ -29,14 +31,23 @@ class SfkBottomBarState internal constructor(tabCount: Int) {
             return
         }
         val goingRight = target > endX.value
-        val stretch = tween<Float>(STRETCH_DURATION_MS, easing = FastOutSlowInEasing)
-        val catchUp = tween<Float>(CATCHUP_DURATION_MS, easing = LinearOutSlowInEasing)
-        if (goingRight) {
-            endX.animateTo(target, stretch)
-            startX.animateTo(target, catchUp)
-        } else {
-            startX.animateTo(target, stretch)
-            endX.animateTo(target, catchUp)
+        val stretch = tween<Float>(
+            durationMillis = STRETCH_DURATION_MS,
+            easing = FastOutSlowInEasing
+        )
+        val catchUp = tween<Float>(
+            durationMillis = STRETCH_DURATION_MS - LAG_MS,
+            delayMillis = LAG_MS,
+            easing = LinearOutSlowInEasing
+        )
+        coroutineScope {
+            if (goingRight) {
+                launch { endX.animateTo(target, stretch) }
+                launch { startX.animateTo(target, catchUp) }
+            } else {
+                launch { startX.animateTo(target, stretch) }
+                launch { endX.animateTo(target, catchUp) }
+            }
         }
     }
 
@@ -54,7 +65,7 @@ class SfkBottomBarState internal constructor(tabCount: Int) {
         const val PINCH_FACTOR_MAX = 1.4f
         const val MIN_DIST_PX = 1f
         const val STRETCH_DURATION_MS = 600
-        const val CATCHUP_DURATION_MS = 420
+        const val LAG_MS = 120
     }
 }
 
